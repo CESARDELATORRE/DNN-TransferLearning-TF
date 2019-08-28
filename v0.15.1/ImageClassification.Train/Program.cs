@@ -42,26 +42,24 @@ namespace ImageClassification.Train
 
                 //Load single full image-set
                 //
-                //IEnumerable<ImageData> images = LoadImagesFromDirectory(folder: fullImagesetFolderPath, useFolderNameasLabel: true);
-                //IDataView fullImagesDataset = mlContext.Data.LoadFromEnumerable(images);
-                //
-                //IDataView shuffledFullImagesDataset = mlContext.Data.ShuffleRows(fullImagesDataset);
-                //
-                // Split the data 80:20 into train and test sets, train and evaluate.
-                //TrainTestData trainTestData = mlContext.Data.TrainTestSplit(shuffledFullImagesDataset, testFraction: 0.2);
-                //IDataView trainDataView = trainTestData.TrainSet;
-                //IDataView testDataView = trainTestData.TestSet;
-                //
+                IEnumerable<ImageData> images = LoadImagesFromDirectory(folder: fullImagesetFolderPath, useFolderNameasLabel: true);
+                IDataView fullImagesDataset = mlContext.Data.LoadFromEnumerable(images);
+
+                IDataView shuffledFullImagesDataset = mlContext.Data.ShuffleRows(fullImagesDataset);
+
+                //Split the data 80:20 into train and test sets, train and evaluate.
+                TrainTestData trainTestData = mlContext.Data.TrainTestSplit(shuffledFullImagesDataset, testFraction: 0.2);
+                IDataView trainDataView = trainTestData.TrainSet;
+                IDataView testDataView = trainTestData.TestSet;
 
                 //Load seggregated train-image-set 
-                //
-                IEnumerable<ImageData> trainImages = LoadImagesFromDirectory(folder: trainImagesetFolderPath, useFolderNameasLabel: true);
-                IDataView trainDataView = mlContext.Data.LoadFromEnumerable(trainImages);
+                ////
+                //IEnumerable<ImageData> trainImages = LoadImagesFromDirectory(folder: trainImagesetFolderPath, useFolderNameasLabel: true);
+                //IDataView trainDataView = mlContext.Data.LoadFromEnumerable(trainImages);
 
-                //Load seggregated test-image-set 
-                IEnumerable<ImageData> testImages = LoadImagesFromDirectory(folder: testImagesetFolderPath, useFolderNameasLabel: true);
-                IDataView testDataView = mlContext.Data.LoadFromEnumerable(testImages);
-
+                ////Load seggregated test-image-set 
+                //IEnumerable<ImageData> testImages = LoadImagesFromDirectory(folder: testImagesetFolderPath, useFolderNameasLabel: true);
+                //IDataView testDataView = mlContext.Data.LoadFromEnumerable(testImages);
 
                 var pipeline = mlContext.Transforms.Conversion.MapValueToKey(outputColumnName:"LabelAsKey", inputColumnName:"Label")
                     .Append(mlContext.Transforms.LoadImages("ImageObject", null, "ImagePath"))
@@ -70,12 +68,12 @@ namespace ImageClassification.Train
                         imageHeight: 299))
                     .Append(mlContext.Transforms.ExtractPixels("Image",
                                                                interleavePixelColors: true,
-                                                               scaleImage: (float)0.003921568627451))
+                                                               scaleImage: 1/255f))  //(float)0.003921568627451
                     .Append(mlContext.Model.ImageClassification("Image", "LabelAsKey",
                             arch: DnnEstimator.Architecture.InceptionV3,
-                            epoch: 10,              //An epoch is one learning cycle where the learner sees the whole training data set.
-                            batchSize: 5,           // batchSize sets then number of images to feed the model at a time
-                            learningRate: 0.01f      //Good for hundreds of images: 0.01f
+                            epoch: 20,              //An epoch is one learning cycle where the learner sees the whole training data set.
+                            batchSize: 10,          // batchSize sets then number of images to feed the model at a time
+                            learningRate: 0.01f     //Good for hundreds of images: 0.01f
                             ));
 
                 Console.WriteLine("*** Training the image classification model with DNN Transfer Learning on top of the selected pre-trained model/architecture ***");
@@ -217,16 +215,16 @@ namespace ImageClassification.Train
             //Compress.ExtractTGZ(Path.Join(imagesDownloadFolder, fileName), imagesDownloadFolder);
 
             //SINGLE SMALL FLOWERS IMAGESET (200 files)
-            //string fileName = "flower_photos_small_set.zip";
-            //string url = $"https://mlnetfilestorage.file.core.windows.net/imagesets/flower_images/flower_photos_small_set.zip?st=2019-08-07T21%3A27%3A44Z&se=2030-08-08T21%3A27%3A00Z&sp=rl&sv=2018-03-28&sr=f&sig=SZ0UBX47pXD0F1rmrOM%2BfcwbPVob8hlgFtIlN89micM%3D";
-            //Web.Download(url, imagesDownloadFolder, fileName);
-            //Compress.UnZip(Path.Join(imagesDownloadFolder, fileName), imagesDownloadFolder);
-
-            //SPLIT TRAIN/TEST DATASETS (FROM SMALL IMAGESET - 200 files)
-            string fileName = "flower_photos_small_set_split.zip";
-            string url = $"https://mlnetfilestorage.file.core.windows.net/imagesets/flower_images/flower_photos_small_set_split.zip?st=2019-08-23T00%3A03%3A25Z&se=2030-08-24T00%3A03%3A00Z&sp=rl&sv=2018-03-28&sr=f&sig=qROCaSGod0mCDP87xDmGCli3o8XyKUlUUimRGGVG9RE%3D";
+            string fileName = "flower_photos_small_set.zip";
+            string url = $"https://mlnetfilestorage.file.core.windows.net/imagesets/flower_images/flower_photos_small_set.zip?st=2019-08-07T21%3A27%3A44Z&se=2030-08-08T21%3A27%3A00Z&sp=rl&sv=2018-03-28&sr=f&sig=SZ0UBX47pXD0F1rmrOM%2BfcwbPVob8hlgFtIlN89micM%3D";
             Web.Download(url, imagesDownloadFolder, fileName);
             Compress.UnZip(Path.Join(imagesDownloadFolder, fileName), imagesDownloadFolder);
+
+            //SPLIT TRAIN/TEST DATASETS (FROM SMALL IMAGESET - 200 files)
+            //string fileName = "flower_photos_small_set_split.zip";
+            //string url = $"https://mlnetfilestorage.file.core.windows.net/imagesets/flower_images/flower_photos_small_set_split.zip?st=2019-08-23T00%3A03%3A25Z&se=2030-08-24T00%3A03%3A00Z&sp=rl&sv=2018-03-28&sr=f&sig=qROCaSGod0mCDP87xDmGCli3o8XyKUlUUimRGGVG9RE%3D";
+            //Web.Download(url, imagesDownloadFolder, fileName);
+            //Compress.UnZip(Path.Join(imagesDownloadFolder, fileName), imagesDownloadFolder);
 
             return Path.GetFileNameWithoutExtension(fileName);
         }
