@@ -71,8 +71,8 @@ namespace ImageClassification.Train
                                                                scaleImage: 1/255f))  //(float)0.003921568627451
                     .Append(mlContext.Model.ImageClassification("Image", "LabelAsKey",
                             arch: DnnEstimator.Architecture.InceptionV3,
-                            epoch: 20,              //An epoch is one learning cycle where the learner sees the whole training data set.
-                            batchSize: 10,          // batchSize sets then number of images to feed the model at a time
+                            epoch: 1200,            //An epoch is one learning cycle where the learner sees the whole training data set.
+                            batchSize: 100,         // batchSize sets then number of images to feed the model at a time
                             learningRate: 0.01f     //Good for hundreds of images: 0.01f
                             ));
 
