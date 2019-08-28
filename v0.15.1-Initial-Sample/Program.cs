@@ -54,8 +54,8 @@ namespace ImageClassification.Train
                     inputColumnName: "ImageObject", imageWidth: 299,
                     imageHeight: 299))
                 .Append(mlContext.Transforms.ExtractPixels("Image",
-                    interleavePixelColors: true,
-                    scaleImage: 1 / 255f))
+                    interleavePixelColors: true))
+                    //scaleImage: 1 / 255f)) //This was not in the initial sample
                 .Append(mlContext.Model.ImageClassification("Image",
                     "Label", arch: DnnEstimator.Architecture.InceptionV3, 
                             epoch: 20,              
